@@ -5,7 +5,87 @@
   <link rel="stylesheet" type="text/css" href="/style.css">
   
   <script>
-
+    const handleResponse = async (response, parseResponse) => {
+      const content = document.querySelector('#content');
+  
+      switch (response.status) {
+        case 200:
+          content.innerHTML = '<h2>Success</h2>';
+          break;
+        case 201:
+          content.innerHTML = '<h2>Created</h2>';
+          break;
+        case 204:
+          content.innerHTML = '<h2>Updated (No Content)</h2>';
+          break;
+        case 400:
+          content.innerHTML = '<h2>Bad Request</h2>';
+          break;
+        case 404:
+          content.innerHTML = '<h2>Not Found</h2>';
+          break;
+        default:
+          content.innerHTML = `<h2>Status Code: ${response.status}</h2>`;
+          break;
+      }
+  
+      if (parseResponse && response.status !== 204) {
+        const obj = await response.json();
+        console.log(obj);
+  
+        if (obj.message) {
+          content.innerHTML += `<p>Message: ${obj.message}</p>`;
+        } else {
+          content.innerHTML += `<p>${JSON.stringify(obj)}</p>`;
+        }
+      }
+    };
+  
+    const requestUpdate = async (e) => {
+      e.preventDefault();
+  
+      const url = document.querySelector('#urlField').value;
+      const method = document.querySelector('#methodSelect').value;
+  
+      const response = await fetch(url, {
+        method,
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+  
+      await handleResponse(response, method === 'get');
+    };
+  
+    const sendPost = async (e) => {
+      e.preventDefault();
+  
+      const nameField = document.querySelector('#nameField');
+      const ageField = document.querySelector('#ageField');
+  
+      const formData = `name=${encodeURIComponent(nameField.value)}&age=${encodeURIComponent(ageField.value)}`;
+  
+      const response = await fetch('/addUser', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          Accept: 'application/json',
+        },
+        body: formData,
+      });
+  
+      await handleResponse(response, response.status !== 204);
+    };
+  
+    const init = () => {
+      const userForm = document.querySelector('#userForm');
+      const nameForm = document.querySelector('#nameForm');
+  
+      userForm.addEventListener('submit', requestUpdate);
+      nameForm.addEventListener('submit', sendPost);
+    };
+  
+    window.addEventListener('load', init);
   </script>
 </head>
 <body>
